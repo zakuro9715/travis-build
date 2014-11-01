@@ -24,16 +24,16 @@ module Travis
         end
 
         def before_install
-          # sh.if '-f composer.json' do
-          #   sh.cmd 'composer self-update', fold: 'before_install.update_composer'
-          # end
+          sh.if '-f composer.json' do
+            sh.cmd 'composer self-update', fold: 'before_install.update_composer'
+          end
         end
 
         def install
-          # sh.if '-f composer.json' do
-          #   directory_cache.add(sub, '~/.composer') if data.cache?(:composer)
-          #   sh.cmd "composer install #{config[:composer_args]}".strip, fold: 'install.composer'
-          # end
+          sh.if '-f composer.json' do
+            directory_cache.add(sub, '~/.composer') if data.cache?(:composer)
+            sh.cmd "composer install #{composer_args}".strip, fold: 'install.composer'
+          end
         end
 
         def script
@@ -50,6 +50,10 @@ module Travis
 
         def version
           config[:php].to_s
+        end
+
+        def composer_args
+          config[:composer_args]
         end
       end
     end
