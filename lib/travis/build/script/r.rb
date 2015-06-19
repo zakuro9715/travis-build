@@ -39,19 +39,8 @@ module Travis
           sh.export 'TRAVIS_R_VERSION', 'release', echo: false
         end
 
-        def setup
+        def configure
           super
-
-          # TODO(craigcitro): Confirm that these do, in fact, print as
-          # green. (They're yellow under vagrant.)
-          sh.echo 'R for Travis-CI is not officially supported, ' +
-                  'but is community maintained.', ansi: :green
-          sh.echo 'Please file any issues using the following link',
-                  ansi: :green
-          sh.echo '  https://github.com/travis-ci/travis-ci/issues' +
-                  '/new?labels=community:r', ansi: :green
-          sh.echo 'and mention @craigcitro, @eddelbuettel and ' +
-                  '@hadley in the issue', ansi: :green
 
           # TODO(craigcitro): python-software-properties?
           sh.echo 'Installing R'
@@ -101,9 +90,31 @@ module Travis
           end
 
           setup_latex
-          
+
           setup_bioc if needs_bioc?
           setup_pandoc if config[:pandoc]
+
+          # install packages which require `sudo` here, before `sudo` is
+          # disabled
+          apt_install config[:apt_packages]
+          brew_install config[:brew_packages]
+          r_binary_install config[:r_binary_packages]
+          setup_devtools
+        end
+
+        def setup
+          super
+
+          # TODO(craigcitro): Confirm that these do, in fact, print as
+          # green. (They're yellow under vagrant.)
+          sh.echo 'R for Travis-CI is not officially supported, ' +
+                  'but is community maintained.', ansi: :green
+          sh.echo 'Please file any issues using the following link',
+                  ansi: :green
+          sh.echo '  https://github.com/travis-ci/travis-ci/issues' +
+                  '/new?labels=community:r', ansi: :green
+          sh.echo 'and mention @craigcitro, @eddelbuettel and ' +
+                  '@hadley in the issue', ansi: :green
         end
 
         def announce
@@ -117,9 +128,6 @@ module Travis
           super
 
           # Install any declared packages
-          apt_install config[:apt_packages]
-          brew_install config[:brew_packages]
-          r_binary_install config[:r_binary_packages]
           r_install config[:r_packages]
           bioc_install config[:bioc_packages]
           r_github_install config[:r_github_packages]
@@ -160,7 +168,7 @@ module Travis
               sh.failure "Found warnings, treating as errors (as requested)."
             end
           end
-          
+
           # Check revdeps, if requested.
           if config[:r_check_revdep]
             sh.echo "Checking reverse dependencies"
@@ -208,7 +216,6 @@ module Travis
 
         def r_github_install(packages)
           return if packages.empty?
-          setup_devtools
           sh.echo "Installing R packages from github: #{packages.join(', ')}"
           pkg_arg = packages_as_arg(packages)
           install_script = [
@@ -222,7 +229,7 @@ module Travis
           ].join(' ')
           sh.cmd "Rscript -e '#{install_script}'"
         end
-        
+
         def r_binary_install(packages)
           return if packages.empty?
           case config[:os]
@@ -270,7 +277,6 @@ module Travis
         end
 
         def install_deps
-          setup_devtools
           if not needs_bioc?
             repos = "\"#{config[:cran]}\""
           else
@@ -297,7 +303,7 @@ module Travis
           )
           sh.export 'RCHECK_DIR', "$(Rscript -e '#{pkg_script}')"
         end
-        
+
         def dump_logs
           export_rcheck_dir
           ['out', 'log', 'fail'].each do |ext|
@@ -312,7 +318,7 @@ module Travis
             sh.cmd cmd
           end
         end
-        
+
         def setup_bioc
           unless @bioc_installed
             sh.echo 'Installing BioConductor'
@@ -391,7 +397,7 @@ module Travis
           pandoc_srcdir = "pandoc-#{config[:pandoc_version]}/#{os_path}"
           pandoc_destdir = '${HOME}/opt/pandoc'
           pandoc_tmpfile = "/tmp/pandoc-#{config[:pandoc_version]}.zip"
-          
+
           sh.mkdir pandoc_destdir, recursive: true
           sh.cmd "curl -o #{pandoc_tmpfile} #{pandoc_url}"
           ['pandoc', 'pandoc-citeproc'].each do |filename|
@@ -400,10 +406,10 @@ module Travis
                    "-d #{pandoc_destdir}"
             sh.chmod '+x', "#{File.join(pandoc_destdir, filename)}"
           end
-          
+
           sh.export 'PATH', "$PATH:#{pandoc_destdir}"
         end
-        
+
       end
     end
   end
