@@ -15,8 +15,8 @@ module Travis
               sh.echo 'Installing Content Shell dependencies', ansi: :yellow
 
               # Enable Multiverse Packages:
-              sh.cmd "sudo sh -c 'echo \"deb http://gce_debian_mirror.storage.googleapis.com precise contrib non-free\" >> /etc/apt/sources.list'"
-              sh.cmd "sudo sh -c 'echo \"deb http://gce_debian_mirror.storage.googleapis.com precise-updates contrib non-free\" >> /etc/apt/sources.list'"
+              sh.cmd "sudo sh -c 'echo \"deb http://gce_debian_mirror.storage.googleapis.com $(lsb_release -rs) contrib non-free\" >> /etc/apt/sources.list'"
+              sh.cmd "sudo sh -c 'echo \"deb http://gce_debian_mirror.storage.googleapis.com $(lsb_release -rs)-updates contrib non-free\" >> /etc/apt/sources.list'"
               sh.cmd "sudo sh -c 'apt-get update'"
 
               # Pre-accepts MSFT Fonts EULA:
