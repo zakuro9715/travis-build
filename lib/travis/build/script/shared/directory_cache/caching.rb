@@ -34,6 +34,10 @@ module Travis
           def add(*paths)
           end
 
+          def valid?
+            true
+          end
+
           private
           def url
             payload = <<-EOF
