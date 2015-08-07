@@ -29,7 +29,7 @@ module Travis
           end
 
           def valid?
-            !!token
+            !!jwt_options[:issuer] && !!jwt_options[:secret] && !!token
           end
 
           def directories
@@ -42,7 +42,7 @@ module Travis
 
             payload = <<-EOF
             {
-              "iss": "#{ENV['JWT_ISSUER']}",
+              "iss": "#{jwt_options[:issuer]}",
               "jti": "",
               "iat": #{Time.now.to_i},
               "exp": #{Time.now.to_i + 300},
@@ -56,11 +56,19 @@ module Travis
             }
             EOF
 
-            @token = JWT.encode(JSON.parse(payload), ENV['JWT_SECRET'], 'HS256')
+            @token = JWT.encode(JSON.parse(payload), jwt_options[:secret], 'HS256')
           end
 
           def url
             "https://caching-staging.travis-ci.org/cache?token=" << token
+          end
+
+          def jwt_options
+            options[:jwt] || {}
+          end
+
+          def options
+            data.cache_options || {}
           end
 
         end
