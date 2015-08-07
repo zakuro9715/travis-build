@@ -29,7 +29,7 @@ module Travis
           end
 
           def valid?
-            true
+            !!token
           end
 
           def directories
@@ -37,7 +37,9 @@ module Travis
           end
 
           private
-          def url
+          def token
+            return @token if @token
+
             payload = <<-EOF
             {
               "iss": "#{ENV['JWT_ISSUER']}",
@@ -54,7 +56,10 @@ module Travis
             }
             EOF
 
-            token = JWT.encode(JSON.parse(payload), ENV['JWT_SECRET'], 'HS256')
+            @token = JWT.encode(JSON.parse(payload), ENV['JWT_SECRET'], 'HS256')
+          end
+
+          def url
             "https://caching-staging.travis-ci.org/cache?token=" << token
           end
 
