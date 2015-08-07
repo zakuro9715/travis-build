@@ -31,11 +31,22 @@ module Travis
             run('fetch', url, timing: true)
           end
 
+          def push
+            run('push', url, assert: false, timing: true)
+          end
+
           def add(*paths)
+            if paths
+              paths.flatten.each_slice(ADD_DIR_MAX) { |dirs| run('add', dirs) }
+            end
           end
 
           def valid?
             true
+          end
+
+          def directories
+            Array(data.cache[:directories])
           end
 
           private
