@@ -14,6 +14,8 @@ gem 'metriks',         '0.9.9.6'
 gem 'metriks-librato_metrics', github: 'eric/metriks-librato_metrics'
 gem 'coder'
 
+gem 'jwt'
+
 group :development do
   gem 'rerun'
 end
