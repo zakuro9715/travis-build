@@ -1,12 +1,15 @@
 require 'shellwords'
 
 require 'travis/build/script/shared/directory_cache/s3/aws4_signature'
+require 'travis/build/script/shared/directory_cache/casher'
 
 module Travis
   module Build
     class Script
       module DirectoryCache
         class S3
+          include Casher
+
           MSGS = {
             config_missing: 'Worker S3 config missing: %s'
           }
@@ -16,19 +19,6 @@ module Travis
             access_key_id:     'access key id',
             secret_access_key: 'secret access key'
           }
-
-          CURL_FORMAT = <<-EOF
-             time_namelookup:  %{time_namelookup} s
-                time_connect:  %{time_connect} s
-             time_appconnect:  %{time_appconnect} s
-            time_pretransfer:  %{time_pretransfer} s
-               time_redirect:  %{time_redirect} s
-          time_starttransfer:  %{time_starttransfer} s
-              speed_download:  %{speed_download} bytes/s
-               url_effective:  %{url_effective}
-                             ----------
-                  time_total:  %{time_total} s
-          EOF
 
           # maximum number of directories to be 'added' to cache via casher
           # in one invocation
@@ -41,10 +31,6 @@ module Travis
               "#{bucket}.#{region == 'us-east-1' ? 's3' : "s3-#{region}"}.amazonaws.com"
             end
           end
-
-          CASHER_URL = 'https://raw.githubusercontent.com/travis-ci/casher/%s/bin/casher'
-          USE_RUBY   = '1.9.3'
-          BIN_PATH   = '$CASHER_DIR/bin/casher'
 
           attr_reader :sh, :data, :slug, :start, :msgs
 
@@ -66,18 +52,6 @@ module Travis
               install
               fetch
               add(directories) if data.cache?(:directories)
-            end
-          end
-
-          def install
-            sh.export 'CASHER_DIR', '$HOME/.casher'
-
-            sh.mkdir '$CASHER_DIR/bin', echo: false, recursive: true
-            sh.cmd "curl #{casher_url} #{debug_flags} -L -o #{BIN_PATH} -s --fail", retry: true, echo: 'Installing caching utilities'
-            sh.raw "[ $? -ne 0 ] && echo 'Failed to fetch casher from GitHub, disabling cache.' && echo > #{BIN_PATH}"
-
-            sh.if "-f #{BIN_PATH}" do
-              sh.chmod '+x', BIN_PATH, assert: false, echo: false
             end
           end
 
@@ -115,27 +89,11 @@ module Travis
             url('PUT', prefixed(branch, '.tgz'), expires: push_timeout)
           end
 
-          def fold(message = nil)
-            @fold_count ||= 0
-            @fold_count  += 1
-
-            sh.fold "cache.#{@fold_count}" do
-              sh.echo message if message
-              yield
-            end
-          end
-
           private
 
             def validate
               VALIDATE.each { |key, msg| msgs << msg unless s3_options[key] }
               sh.echo MSGS[:config_missing] % msgs.join(', '), ansi: :red unless msgs.empty?
-            end
-
-            def run(command, args, options = {})
-              sh.if "-f #{BIN_PATH}" do
-                sh.cmd "rvm #{USE_RUBY} --fuzzy do #{BIN_PATH} #{command} #{Array(args).join(' ')}", options.merge(echo: false)
-              end
             end
 
             def group
@@ -183,22 +141,6 @@ module Travis
 
             def options
               data.cache_options || {}
-            end
-
-            def casher_url
-              CASHER_URL % casher_branch
-            end
-
-            def casher_branch
-              if branch = data.cache[:branch]
-                branch
-              else
-                data.cache?(:edge) ? 'master' : 'production'
-              end
-            end
-
-            def debug_flags
-              "-v -w '#{CURL_FORMAT}'" if data.cache[:debug]
             end
         end
       end
