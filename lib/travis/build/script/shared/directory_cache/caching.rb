@@ -12,6 +12,8 @@ module Travis
 
           attr_reader :sh, :data, :slug, :start, :msgs
 
+          ADD_DIR_MAX = 100
+
           def initialize(sh, data, slug, start = Time.now)
             @sh = sh
             @data = data
