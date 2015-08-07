@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Travis::Build::Script::DirectoryCache::Caching, :sexp do
-  let(:s3_options)    { { bucket: 's3_bucket', secret_access_key: 's3_secret_access_key', access_key_id: 's3_access_key_id' } }
-  let(:cache_options) { { fetch_timeout: 20, push_timeout: 30, type: 's3', s3: s3_options } }
+  let(:jwt_options)    { { issuer: 'test_issuer', secret: 'superduper' } }
+  let(:cache_options) { { fetch_timeout: 20, push_timeout: 30, type: 'caching', jwt: jwt_options } }
   let(:data)          { PAYLOADS[:push].deep_merge(config: config, cache_options: cache_options, job: { branch: branch, pull_request: pull_request }) }
   let(:config)        { {} }
   let(:pull_request)  { nil }
