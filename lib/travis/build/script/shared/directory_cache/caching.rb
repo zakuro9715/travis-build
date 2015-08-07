@@ -8,6 +8,7 @@ module Travis
         class Caching
           include Casher
           require 'jwt'
+          require 'json'
 
           attr_reader :sh, :data, :slug, :start, :msgs
 
@@ -67,7 +68,7 @@ module Travis
             }
             EOF
 
-            token = JWT.encode(payload.tap {|x| puts x}, ENV['JWT_SECRET'], 'HS256')
+            token = JWT.encode(JSON.parse(payload), ENV['JWT_SECRET'], 'HS256')
             "https://caching-staging.travis-ci.org/cache?token=" << token
           end
 
