@@ -20,10 +20,6 @@ module Travis
             secret_access_key: 'secret access key'
           }
 
-          # maximum number of directories to be 'added' to cache via casher
-          # in one invocation
-          ADD_DIR_MAX = 100
-
           KeyPair = Struct.new(:id, :secret)
 
           Location = Struct.new(:scheme, :region, :bucket, :path) do
@@ -45,20 +41,6 @@ module Travis
           def valid?
             validate
             msgs.empty?
-          end
-
-          def setup
-            fold 'Setting up build cache' do
-              install
-              fetch
-              add(directories) if data.cache?(:directories)
-            end
-          end
-
-          def add(*paths)
-            if paths
-              paths.flatten.each_slice(ADD_DIR_MAX) { |dirs| run('add', dirs) }
-            end
           end
 
           def fetch

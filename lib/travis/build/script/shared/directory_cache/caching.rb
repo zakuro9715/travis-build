@@ -12,8 +12,6 @@ module Travis
 
           attr_reader :sh, :data, :slug, :start, :msgs
 
-          ADD_DIR_MAX = 100
-
           def initialize(sh, data, slug, start = Time.now)
             @sh = sh
             @data = data
@@ -22,26 +20,12 @@ module Travis
             @msgs = []
           end
 
-          def setup
-            fold 'Setting up build cache' do
-              install
-              fetch
-              add(directories) if data.cache?(:directories)
-            end
-          end
-
           def fetch
             run('fetch', url, timing: true)
           end
 
           def push
             run('push', url, assert: false, timing: true)
-          end
-
-          def add(*paths)
-            if paths
-              paths.flatten.each_slice(ADD_DIR_MAX) { |dirs| run('add', dirs) }
-            end
           end
 
           def valid?

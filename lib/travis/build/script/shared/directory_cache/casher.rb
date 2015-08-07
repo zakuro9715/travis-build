@@ -21,6 +21,10 @@ module Travis
                   time_total:  %{time_total} s
           EOF
 
+          # maximum number of directories to be 'added' to cache via casher
+          # in one invocation
+          ADD_DIR_MAX = 100
+
           def install
             sh.export 'CASHER_DIR', '$HOME/.casher'
 
@@ -30,6 +34,20 @@ module Travis
 
             sh.if "-f #{BIN_PATH}" do
               sh.chmod '+x', BIN_PATH, assert: false, echo: false
+            end
+          end
+
+          def setup
+            fold 'Setting up build cache' do
+              install
+              fetch
+              add(directories) if data.cache?(:directories)
+            end
+          end
+
+          def add(*paths)
+            if paths
+              paths.flatten.each_slice(ADD_DIR_MAX) { |dirs| run('add', dirs) }
             end
           end
 
