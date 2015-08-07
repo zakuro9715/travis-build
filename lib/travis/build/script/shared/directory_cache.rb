@@ -15,7 +15,7 @@ module Travis
         end
 
         def cache_class
-          type = data.cache_options[:type] || :noop
+          type = 'caching' #data.cache_options[:type] || :noop
           name = type.to_s.capitalize
           raise ArgumentError, 'unknown caching mode %p' % type unless DirectoryCache.const_defined?(name, false)
           DirectoryCache.const_get(name)
