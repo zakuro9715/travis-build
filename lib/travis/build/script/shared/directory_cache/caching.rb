@@ -38,16 +38,16 @@ module Travis
           def url
             payload = <<-EOF
             {
-              "iss": #{ENV['JWT_ISSUER']},
+              "iss": "#{ENV['JWT_ISSUER']}",
               "jti": "",
               "iat": #{Time.now.to_i},
               "exp": #{Time.now.to_i + 300},
               "payload": {
-                "repo_slug": #{data.slug},
+                "repo_slug": "#{data.slug}",
                 "repo_id": #{data.github_id},
-                "branch": data.branch,
+                "branch": "#{data.branch}",
                 "backend": "s3",
-                "cache_slug": #{slug}
+                "cache_slug": "#{slug}"
               }
             }
             EOF
