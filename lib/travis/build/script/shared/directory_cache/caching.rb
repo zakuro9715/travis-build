@@ -67,7 +67,7 @@ module Travis
             }
             EOF
 
-            token = JWT.encode(payload, ENV['JWT_SECRET'], 'HS256')
+            token = JWT.encode(payload.tap {|x| puts x}, ENV['JWT_SECRET'], 'HS256')
             "https://caching-staging.travis-ci.org/cache?token=" << token
           end
 
