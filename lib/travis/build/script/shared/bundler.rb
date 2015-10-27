@@ -22,16 +22,14 @@ module Travis
         end
 
         def setup_cache
-          sh.if gemfile? do
-            sh.if gemfile_lock? do
-              directory_cache.add(bundler_path(false)) if data.cache?(:bundler)
-              sh.cmd bundler_install("--deployment"), fold: "install.bundler", retry: true
-            end
-            sh.else do
-              # Cache bundler if it has been explicitly enabled
-              directory_cache.add(bundler_path(false)) if data.cache?(:bundler, false)
-              sh.cmd bundler_install, fold: "install.bundler", retry: true
-            end
+          if data.cache[:feature]
+            _setup_cache
+          end
+        end
+
+        def install
+          unless data.cache[:feature]
+            _setup_cache
           end
         end
 
@@ -90,6 +88,20 @@ module Travis
 
           def bundler_args
             config[:bundler_args]
+          end
+
+          def _setup_cache
+            sh.if gemfile? do
+              sh.if gemfile_lock? do
+                directory_cache.add(bundler_path(false)) if data.cache?(:bundler)
+                sh.cmd bundler_install("--deployment"), fold: "install.bundler", retry: true
+              end
+              sh.else do
+                # Cache bundler if it has been explicitly enabled
+                directory_cache.add(bundler_path(false)) if data.cache?(:bundler, false)
+                sh.cmd bundler_install, fold: "install.bundler", retry: true
+              end
+            end
           end
       end
     end

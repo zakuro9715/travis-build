@@ -45,13 +45,16 @@ module Travis
         end
 
         def setup_cache
-          sh.if podfile? do
-            directory_cache.add("#{pod_dir}/Pods") if data.cache?(:cocoapods)
+          if data.cache[:feature]
+            _setup_cache
           end
         end
 
         def install
           super
+          unless data.cache[:feature]
+            _setup_cache
+          end
           sh.if podfile? do
             sh.if "! ([[ -f #{pod_dir}/Podfile.lock && -f #{pod_dir}/Pods/Manifest.lock ]] && cmp --silent #{pod_dir}/Podfile.lock #{pod_dir}/Pods/Manifest.lock)", raw: true do
               sh.fold('install.cocoapods') do
@@ -116,6 +119,12 @@ module Travis
           #   Using Objective-C testing without specifying a scheme and either a workspace or a project is deprecated.
           #   Check out our documentation for more information: http://about.travis-ci.org/docs/user/languages/objective-c/
           # msg
+
+          def _setup_cache
+            sh.if podfile? do
+              directory_cache.add("#{pod_dir}/Pods") if data.cache?(:cocoapods)
+            end
+          end
       end
     end
   end

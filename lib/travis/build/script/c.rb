@@ -28,8 +28,15 @@ module Travis
         end
 
         def setup_cache
-          if data.cache?(:ccache)
-            directory_cache.add('~/.ccache')
+          if data.cache[:feature]
+            _setup_cache
+          end
+        end
+
+        def install
+          super
+          unless data.cache[:feature]
+            _setup_cache
           end
         end
 
@@ -42,6 +49,13 @@ module Travis
           def compiler
             config[:compiler].to_s
           end
+
+          def _setup_cache
+            if data.cache?(:ccache)
+              directory_cache.add('~/.ccache')
+            end
+          end
+
       end
     end
   end

@@ -38,12 +38,15 @@ module Travis
         end
 
         def setup_cache
-          if data.cache?(:pip)
-            directory_cache.add '$HOME/.cache/pip'
+          if data.cache[:feature]
+            _setup_cache
           end
         end
 
         def install
+          unless data.cache[:feature]
+            _setup_cache
+          end
           sh.if '-f Requirements.txt' do
             sh.cmd 'pip install -r Requirements.txt', fold: 'install', retry: true
           end
@@ -101,6 +104,12 @@ module Travis
           def setup_path(version = 'nightly')
             sh.cmd "sed -e 's|export PATH=\\(.*\\)$|export PATH=/opt/python/#{version}/bin:\\1|' #{PYENV_PATH_FILE} > #{TEMP_PYENV_PATH_FILE}"
             sh.cmd "cat #{TEMP_PYENV_PATH_FILE} | sudo tee #{PYENV_PATH_FILE} > /dev/null"
+          end
+
+          def _setup_cache
+            if data.cache?(:pip)
+              directory_cache.add '$HOME/.cache/pip'
+            end
           end
       end
     end
