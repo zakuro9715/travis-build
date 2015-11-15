@@ -10,6 +10,11 @@ module Travis
         def configure
           super
           configure_hhvm if hhvm?
+          sh.cmd "phpenv global #{version} 2>/dev/null", assert: false
+          sh.if "$? -ne 0" do
+            install_php_on_demand(version)
+            sh.cmd "phpenv global #{version}", assert: true
+          end
         end
 
         def export
@@ -19,11 +24,6 @@ module Travis
 
         def setup
           super
-          sh.cmd "phpenv global #{version} 2>/dev/null", assert: false
-          sh.if "$? -ne 0" do
-            install_php_on_demand(version)
-            sh.cmd "phpenv global #{version}", assert: true
-          end
           sh.cmd "phpenv rehash", assert: false, echo: false, timing: false
         end
 
@@ -120,7 +120,7 @@ hhvm.libxml.ext_entity_whitelist=file,http,https
             setup_alias(version, '7.0snapshot')
             version = '7.0snapshot'
           end
-          sh.cmd "curl -s -o archive.tar.bz2 #{archive_url_for('travis-php-archives', version)} && tar xjf archive.tar.bz2 --directory /", echo: false, assert: false
+          sh.cmd "curl -s -o archive.tar.bz2 #{archive_url_for('travis-php-archives', version)} && sudo tar xjf archive.tar.bz2 --directory /", echo: false, assert: false
           sh.cmd "rm -f archive.tar.bz2", echo: false
         end
 
